@@ -12,6 +12,50 @@ import pandas as pd
 import requests
 pd.set_option('display.max_columns', 50)
 
+#https://medium.com/@senchooo/scraping-all-game-in-steam-using-python-e9f0ad206add
+#https://andrew-muller.medium.com/scraping-steam-user-reviews-9a43f9e38c92
+
+
+#%% Web Scraping 
+from bs4 import BeautifulSoup
+
+def get_app_id(game_name):
+    response = requests.get(url=f'https://store.steampowered.com/search/?term={game_name}&category1=998', headers={'User-Agent': 'Mozilla/5.0'})
+    soup = BeautifulSoup(response.text, 'html.parser')
+    app_id = soup.find(class_='search_result_row')['data-ds-appid']
+    return app_id
+
+def get_n_appids(n=100):
+    appids = []
+    url = f'https://store.steampowered.com/search?category1=998&ndl='
+    page = 0
+    while page*25 < n:
+        print(page)
+        page += 1
+        response = requests.get(url=url+str(page), headers={'User-Agent': 'Mozilla/5.0'})
+        soup = BeautifulSoup(response.text, 'html.parser')
+        for row in soup.find_all(class_='search_result_row'):
+            appids.append(row['data-ds-appid'])
+    return appids[:n]
+
+appid_1000 = get_n_appids()
+
+
+#%% Descarga de detalles de appids
+
+def get_data_appid(appid):
+    url = 'http://store.steampowered.com/api/appdetails/'
+    parameters = {"appids": appid}
+    json_req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'},params = parameters).json()
+    return json_req
+
+json_req = get_data_appid(appid=10)
+r1 = get_data_appid(appid=10)
+
+#for appid in appids:
+#    reviews += get_n_reviews(appid, 100)
+#df = pd.DataFrame(reviews)[['review', 'voted_up']]
+#df
 
 
 
@@ -60,45 +104,4 @@ print(response)
 print(response_2)
 response_3 = get_n_reviews('10', n=1000)
 
-
-#%% Web Scraping 
-
-from bs4 import BeautifulSoup
-def get_app_id(game_name):
-    response = requests.get(url=f'https://store.steampowered.com/search/?term={game_name}&category1=998', headers={'User-Agent': 'Mozilla/5.0'})
-    soup = BeautifulSoup(response.text, 'html.parser')
-    app_id = soup.find(class_='search_result_row')['data-ds-appid']
-    return app_id
-
-def get_n_appids(n=100, filter_by='topsellers'):
-    appids = []
-    url = 'https://store.steampowered.com/search/?category1=998&page=' #f'https://store.steampowered.com/search/?category1=998&filter={filter_by}&page='
-    page = 0
-
-    while page*25 < n:
-        page += 1
-        response = requests.get(url=url+str(page), headers={'User-Agent': 'Mozilla/5.0'})
-        soup = BeautifulSoup(response.text, 'html.parser')
-        for row in soup.find_all(class_='search_result_row'):
-            print(len(appids))
-            appids.append(row['data-ds-appid'])
-
-    return appids[:n]
-
-reviews = []
-appids = get_n_appids(100)
-
-def get_data_appid(appid):
-    url = 'http://store.steampowered.com/api/appdetails/'
-    parameters = {"appids": appid}
-    json_req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'}).json()
-    return json_req
-parameters = {"appids": 10}
-json_req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'},params = parameters).json()
-r1 = get_data_appid(appid=10)
-
-#for appid in appids:
-#    reviews += get_n_reviews(appid, 100)
-#df = pd.DataFrame(reviews)[['review', 'voted_up']]
-#df
 
