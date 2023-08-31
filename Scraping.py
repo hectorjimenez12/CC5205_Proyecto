@@ -10,38 +10,58 @@ import json
 import numpy as np
 import pandas as pd
 import requests
+import pickle
+import os
+import pdb
 pd.set_option('display.max_columns', 50)
 
+os.chdir('C:/Users/hecto/OneDrive/Documentos/GitHub/Cursos_U/CC5205/CC5205_Proyecto/')
 #https://medium.com/@senchooo/scraping-all-game-in-steam-using-python-e9f0ad206add
 #https://andrew-muller.medium.com/scraping-steam-user-reviews-9a43f9e38c92
-
+#https://nik-davis.github.io/posts/2019/steam-data-collection/
+#https://github.com/TR-1000/GameScraper
 
 #%% Web Scraping 
 from bs4 import BeautifulSoup
 
-def get_app_id(game_name):
-    response = requests.get(url=f'https://store.steampowered.com/search/?term={game_name}&category1=998', headers={'User-Agent': 'Mozilla/5.0'})
-    soup = BeautifulSoup(response.text, 'html.parser')
-    app_id = soup.find(class_='search_result_row')['data-ds-appid']
-    return app_id
-
-def get_n_appids(n=100):
+def get_n_appids(n=100,pageN=0):
+    #pdb.set_trace()
     appids = []
-    url = f'https://store.steampowered.com/search?category1=998&ndl='
-    page = 0
-    while page*25 < n:
-        print(page)
+    url = 'https://store.steampowered.com/search?category1=998&page='#'https://store.steampowered.com/search?category1=998&ndl='
+    page = pageN
+    while len(appids) < n:
+        #print(page)
         page += 1
         response = requests.get(url=url+str(page), headers={'User-Agent': 'Mozilla/5.0'})
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser') #Nrows = len(soup.find_all(class_='search_result_row'))
         for row in soup.find_all(class_='search_result_row'):
             appids.append(row['data-ds-appid'])
+    with open('Save_Scrap/' +str(pageN*25)+'_'+str(page*25) +'.pickle', 'wb') as handle:
+        pickle.dump(appids, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return appids[:n]
 
-appid_1000 = get_n_appids()
+80000/25
+#for ipage in range(0,3200,4):
+#    print(ipage)
+#    try:
+#        get_n_appids(n=100,pageN=ipage)
+#    except:
+#        print('error ' + str(ipage) )
+    
+
+def get_id_pickle(n=100):
+    appids = [] 
+    for i in range(0,n,100):
+        with open( 'Save_Scrap/' +str(i)+'_'+str(i+100) +'.pickle', 'rb') as file:
+            appids += pickle.load(file)
+    return appids
+appids = np.unique(get_id_pickle(n=80000))
+
 
 
 #%% Descarga de detalles de appids
+
+
 
 def get_data_appid(appid):
     url = 'http://store.steampowered.com/api/appdetails/'
@@ -49,13 +69,24 @@ def get_data_appid(appid):
     json_req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'},params = parameters).json()
     return json_req
 
-json_req = get_data_appid(appid=10)
-r1 = get_data_appid(appid=10)
+#json_req = get_data_appid(appid= appids[0] )
 
-#for appid in appids:
-#    reviews += get_n_reviews(appid, 100)
-#df = pd.DataFrame(reviews)[['review', 'voted_up']]
-#df
+def get_atributes_appids(appids,idname='1'):
+    data = {}
+    ids_fail = []
+    for i in appids:
+        try:
+            json_atributes = get_data_appid(appid= i )
+            data = dict(data, **json_atributes)
+        except:
+            ids_fail.append(i)
+    with open('Save_Scrap/' + idname +'AppData.pickle', 'wb') as handle:
+        pickle.dump(appids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    return data, ids_fail
+
+
+data_ids , idsfail  = get_atributes_appids(appids[0:10000]    ,idname='1')
+data_ids2, idsfail2 = get_atributes_appids(appids[10000:20000],idname='2')
 
 
 
