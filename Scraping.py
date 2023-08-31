@@ -40,8 +40,8 @@ def get_n_appids(n=100,pageN=0):
         pickle.dump(appids, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return appids[:n]
 
-80000/25
-#for ipage in range(0,3200,4):
+
+#for ipage in range(0,int(80000/25),4):
 #    print(ipage)
 #    try:
 #        get_n_appids(n=100,pageN=ipage)
@@ -60,9 +60,6 @@ appids = np.unique(get_id_pickle(n=80000))
 
 
 #%% Descarga de detalles de appids
-
-
-
 def get_data_appid(appid):
     url = 'http://store.steampowered.com/api/appdetails/'
     parameters = {"appids": appid}
@@ -81,12 +78,30 @@ def get_atributes_appids(appids,idname='1'):
         except:
             ids_fail.append(i)
     with open('Save_Scrap/' + idname +'AppData.pickle', 'wb') as handle:
-        pickle.dump(appids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return data, ids_fail
 
 
-data_ids , idsfail  = get_atributes_appids(appids[0:10000]    ,idname='1')
-data_ids2, idsfail2 = get_atributes_appids(appids[10000:20000],idname='2')
+for i in range(0,len(appids),1000):
+    print(i)
+    try:
+        get_atributes_appids(appids[i:(i+1000)], idname=str(i))
+    except:
+        print('error ' + str(i) )
+        
+#data_ids , idsfail  = get_atributes_appids(appids[:20], idname='1')
+
+
+
+#%% Cargar dataset de juegos
+
+def get_appdata_pickle(n=1000):
+    appids = {} 
+    for i in range(0,n,1000):
+        with open( 'Save_Scrap/'+str(i)+'AppData.pickle', 'rb') as file:
+            appids = dict(appids,**pickle.load(file))
+    return appids
+appdata = get_appdata_pickle(n=1000)
 
 
 
