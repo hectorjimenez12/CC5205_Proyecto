@@ -20,6 +20,7 @@ os.chdir('C:/Users/hecto/OneDrive/Documentos/GitHub/Cursos_U/CC5205/CC5205_Proye
 #https://andrew-muller.medium.com/scraping-steam-user-reviews-9a43f9e38c92
 #https://nik-davis.github.io/posts/2019/steam-data-collection/
 #https://github.com/TR-1000/GameScraper
+#https://geezam.com/steam-api-with-python/
 
 #%% Web Scraping 
 from bs4 import BeautifulSoup
@@ -40,7 +41,6 @@ def get_n_appids(n=100,pageN=0):
         pickle.dump(appids, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return appids[:n]
 
-
 #for ipage in range(0,int(80000/25),4):
 #    print(ipage)
 #    try:
@@ -59,7 +59,7 @@ appids = np.unique(get_id_pickle(n=80000))
 
 
 
-#%% Descarga de detalles de appids
+#%% Descarga de atributos de appids
 def get_data_appid(appid):
     url = 'http://store.steampowered.com/api/appdetails/'
     parameters = {"appids": appid}
@@ -79,15 +79,24 @@ def get_atributes_appids(appids,idname='1'):
             ids_fail.append(i)
     with open('Save_Scrap/' + idname +'AppData.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    print(ids_fail)
     return data, ids_fail
 
 
-for i in range(0,len(appids),1000):
+url = 'https://raw.githubusercontent.com/hectorjimenez12/Mineria_Datos/main/steam.csv'
+df = pd.read_csv(url)
+app_kaggle = df.appid.values
+
+step=100
+for i in range(0,len(app_kaggle),step): #4min
     print(i)
     try:
-        get_atributes_appids(appids[i:(i+1000)], idname=str(i))
+        get_atributes_appids(app_kaggle[i:(i+step)], idname= str(i) + '_'+str(i+step) )
     except:
         print('error ' + str(i) )
+   
+        
+    
         
 #data_ids , idsfail  = get_atributes_appids(appids[:20], idname='1')
 
@@ -103,7 +112,7 @@ def get_appdata_pickle(n=1000):
     return appids
 appdata = get_appdata_pickle(n=1000)
 
-
+np.array(range(0,1000,1000))
 
 
 #%% DESCARGA DE REVIEWS
