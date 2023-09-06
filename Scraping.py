@@ -77,9 +77,9 @@ def get_atributes_appids(appids,idname='1'):
             data = dict(data, **json_atributes)
         except:
             ids_fail.append(i)
-    with open('Save_Scrap/' + idname +'AppData.pickle', 'wb') as handle:
+    with open('Save_Scrap/' + idname +'AppDatav2.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    print(ids_fail)
+    print(len(ids_fail))
     return data, ids_fail
 
 
@@ -87,33 +87,30 @@ url = 'https://raw.githubusercontent.com/hectorjimenez12/Mineria_Datos/main/stea
 df = pd.read_csv(url)
 app_kaggle = df.appid.values
 
-step=100
-for i in range(0,len(app_kaggle),step): #4min
-    print(i)
-    try:
-        get_atributes_appids(app_kaggle[i:(i+step)], idname= str(i) + '_'+str(i+step) )
-    except:
-        print('error ' + str(i) )
+step=1000
+ids_obj = appids
+#for i in range(69000,len(ids_obj),step): # 13 min
+#    print(i)
+#    try:
+#        get_atributes_appids(ids_obj[i:(i+step)], idname= str(i) + '_'+str(i+step) )
+#    except:
+#        print('error ' + str(i) )
    
-        
-    
-        
 #data_ids , idsfail  = get_atributes_appids(appids[:20], idname='1')
 
 
 
 #%% Cargar dataset de juegos
 
-def get_appdata_pickle(n=1000):
+def get_appdata_pickle(max_id,step=1000):
     appids = {} 
-    for i in range(0,n,1000):
-        with open( 'Save_Scrap/'+str(i)+'AppData.pickle', 'rb') as file:
+    for i in range(0,max_id,step):
+        with open( 'Save_Scrap/'+ str(i)+'_'+str(i+step) +'AppDatav2.pickle', 'rb') as file:
             appids = dict(appids,**pickle.load(file))
     return appids
-appdata = get_appdata_pickle(n=1000)
 
-np.array(range(0,1000,1000))
-
+appdata = get_appdata_pickle(max_id = 71000 ,step=1000)
+len(appdata.keys())
 
 #%% DESCARGA DE REVIEWS
 
